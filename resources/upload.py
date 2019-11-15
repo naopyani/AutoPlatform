@@ -15,17 +15,19 @@ class Upload(Resource):
 
     def post(self):
         self.parser.add_argument('file', type=FileStorage, location='files')
+        cur_paths = request.form.getlist('path')
         dict1 = request.files
-        dicts = dict1.getlist('files[]')
-        for _dict in dicts:
+        dicts = dict1.getlist('files')
+        # 找一下path
+        for i in range(len(dicts)):
             paths = os.path.abspath('.')
-            sp_path = str(paths + "\\SoloPiDir\\").replace("\\", '/')
-            _dict.save(sp_path + _dict.filename)
-            with open(sp_path + _dict.filename, encoding='utf-8') as dt:
+            sp_path = str(paths + "\\" + cur_paths[i] +"\\").replace("\\", '/')
+            dicts[i].save(sp_path + dicts[i].filename)
+            with open(sp_path + dicts[i].filename, encoding='utf-8') as dt:
                 cont = json.load(dt)
                 desc = cont["caseDesc"]
             ids = 'sp-' + str(round(time.time() * 1000))
-            ssp = SearchSP(id=ids, name=_dict.filename, description=desc)
+            ssp = SearchSP(id=ids, name=dicts[i].filename, description=desc, path=cur_paths[i])
             db.session.add(ssp)
             db.session.commit()
         print(dicts)
